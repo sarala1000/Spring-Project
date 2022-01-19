@@ -42,6 +42,12 @@ public class StudentOut {
     private String phone;
     private String profilepicture;
 
+    private Double avgscore;
+
+    public Double getAvgScore() {
+        return avgscore;
+    }
+
     public Integer getSatScore() {
         return satscore;
     }
