@@ -6,6 +6,8 @@ import com.handson.basic.model.*;
 import com.handson.basic.repo.StudentIn;
 import com.handson.basic.repo.StudentService;
 import com.handson.basic.util.AWSService;
+import com.handson.basic.util.SmsService;
+import org.apache.commons.collections4.IteratorUtils;
 import org.joda.time.LocalDate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -18,6 +20,7 @@ import javax.persistence.EntityManager;
 import javax.validation.constraints.Min;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import static com.handson.basic.util.Dates.atUtc;
 import static com.handson.basic.util.FPS.FPSBuilder.aFPS;
@@ -40,6 +43,9 @@ public class StudentsController {
 
     @Autowired
     AWSService awsService;
+
+    @Autowired
+    SmsService smsService;
 
     @RequestMapping(value = "", method = RequestMethod.GET)
     public ResponseEntity<PaginationAndList> search(@RequestParam(required = false) String fullName,
@@ -128,6 +134,19 @@ public class StudentsController {
         if (dbStudent.isEmpty()) throw new RuntimeException("Student with id: " + id + " not found");
         studentService.delete(dbStudent.get());
         return new ResponseEntity<>("DELETED", HttpStatus.OK);
+    }
+
+    @RequestMapping(value = "/sms/all", method = RequestMethod.POST)
+    public ResponseEntity<?> smsAll(@RequestParam String text)
+    {
+        new Thread(()-> {
+            IteratorUtils.toList(studentService.all().iterator())
+                    .parallelStream()
+                    .map(student -> student.getPhone())
+                    .filter(phone -> phone != null)
+                    .forEach(phone -> smsService.send(text, phone));
+        }).start();
+        return new ResponseEntity<>("SENDING", HttpStatus.OK);
     }
 
 }
