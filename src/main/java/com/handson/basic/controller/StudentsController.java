@@ -6,6 +6,7 @@ import com.handson.basic.model.*;
 import com.handson.basic.repo.StudentIn;
 import com.handson.basic.repo.StudentService;
 import com.handson.basic.util.AWSService;
+import com.handson.basic.util.HandsonException;
 import com.handson.basic.util.SmsService;
 import org.apache.commons.collections4.IteratorUtils;
 import org.joda.time.LocalDate;
@@ -93,7 +94,7 @@ public class StudentsController {
     public ResponseEntity<?> getOneStudent(@PathVariable Long id)
     {
         Optional<Student> dbStudent = studentService.findById(id);
-        if (dbStudent.isEmpty()) throw new RuntimeException("Student with id: " + id + " not found");
+        if (dbStudent.isEmpty()) throw new HandsonException("Student with id: " + id + " not found");
         return new ResponseEntity<>(StudentOut.of(dbStudent.get(), awsService), HttpStatus.OK);
     }
 
@@ -109,7 +110,7 @@ public class StudentsController {
     public ResponseEntity<?> updateStudent(@PathVariable Long id, @RequestBody StudentIn student)
     {
         Optional<Student> dbStudent = studentService.findById(id);
-        if (dbStudent.isEmpty()) throw new RuntimeException("Student with id: " + id + " not found");
+        if (dbStudent.isEmpty()) throw new HandsonException("Student with id: " + id + " not found");
         student.updateStudent(dbStudent.get());
         Student updatedStudent = studentService.save(dbStudent.get());
         return new ResponseEntity<>(StudentOut.of(updatedStudent, awsService), HttpStatus.OK);
@@ -119,7 +120,7 @@ public class StudentsController {
     public ResponseEntity<?> uploadStudentImage(@PathVariable Long id,  @RequestParam("image") MultipartFile image)
     {
         Optional<Student> dbStudent = studentService.findById(id);
-        if (dbStudent.isEmpty()) throw new RuntimeException("Student with id: " + id + " not found");
+        if (dbStudent.isEmpty()) throw new HandsonException("Student with id: " + id + " not found");
         String bucketPath = "apps/niv/student-" +  id + ".png" ;
         awsService.putInBucket(image, bucketPath);
         dbStudent.get().setProfilePicture(bucketPath);
