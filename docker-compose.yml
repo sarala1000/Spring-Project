@@ -1,11 +1,13 @@
-version: "3.9"
-
 services:
   db:
-    image: postgres
+    image: postgres:18
+    restart: always
     environment:
       POSTGRES_PASSWORD: postgres
     ports:
       - "5432:5432"
     volumes:
-      - ./postgresdata:/var/lib/postgresql/data
+      - postgresdata:/var/lib/postgresql
+
+volumes:
+  postgresdata:
