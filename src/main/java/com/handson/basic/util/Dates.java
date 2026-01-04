@@ -1,24 +1,22 @@
 package com.handson.basic.util;
 
-import org.joda.time.*;
 import org.springframework.lang.Nullable;
 
-import java.text.SimpleDateFormat;
-import java.time.OffsetDateTime;
-import java.util.Calendar;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
 import java.util.Date;
 import java.util.Objects;
 import java.util.TimeZone;
 
 public class Dates {
-    public static SimpleDateFormat shortDate = new SimpleDateFormat("YYYY-MM-dd");
     public static TimeZone TIME_ZONE = TimeZone.getTimeZone("Asia/Jerusalem");
+    public static ZoneId TIME_ZONE_ID = ZoneId.of("Asia/Jerusalem");
 
     public Dates() {
     }
 
     public static String dateToStr(@Nullable LocalDate date) {
-        return date == null ? null : shortDate.format(date);
+        return date == null ? null : date.format(DateTimeFormatter.ofPattern("yyyy-MM-dd"));
     }
 
     public static Date atUtc(LocalDateTime date) {
@@ -27,15 +25,9 @@ public class Dates {
 
     public static Date atUtc(LocalDateTime date, TimeZone zone) {
         if (date == null) return null;
-        Calendar calendar = Calendar.getInstance();
-        calendar.setFirstDayOfWeek(Calendar.SUNDAY);
-        calendar.setTimeZone(zone);
-        calendar.set(date.getYear(), date.getMonthOfYear()-1, date.getDayOfMonth());//convert from locatDateTime to Calender time
-        calendar.set(Calendar.HOUR_OF_DAY, date.getHourOfDay());
-        calendar.set(Calendar.MINUTE, date.getMinuteOfHour());
-        calendar.set(Calendar.SECOND, date.getSecondOfMinute());
-        calendar.set(Calendar.MILLISECOND, 0);
-        return calendar.getTime();
+        ZoneId zoneId = zone.toZoneId();
+        ZonedDateTime zonedDateTime = date.atZone(zoneId);
+        return Date.from(zonedDateTime.toInstant());
     }
 
     public static Date atUtc(@Nullable LocalDate date) {
@@ -43,7 +35,7 @@ public class Dates {
     }
 
     public static Date atUtc(@Nullable LocalDate date, TimeZone zone) {
-        return date == null ? null : atUtc(date.toLocalDateTime(LocalTime.MIDNIGHT), zone);
+        return date == null ? null : atUtc(date.atStartOfDay(), zone);
     }
 
     public static LocalDateTime atLocalTime(Date date) {
@@ -52,23 +44,16 @@ public class Dates {
 
     public static LocalDateTime atLocalTime(Date date, TimeZone zone) {
         if (date == null) return null;
-        var localDate = OffsetDateTime.ofInstant(date.toInstant(), zone.toZoneId()).toLocalDateTime();
-        Calendar c = Calendar.getInstance();
-        c.set(localDate.getYear(), localDate.getMonthValue() - 1, localDate.getDayOfMonth());
-        c.set(Calendar.HOUR_OF_DAY, localDate.getHour());
-        c.set(Calendar.MINUTE, localDate.getMinute());
-        c.set(Calendar.SECOND, localDate.getSecond());
-        c.set(Calendar.MILLISECOND, 0);
-        LocalDateTime res = LocalDateTime.fromCalendarFields(c);
-        return res;
+        ZoneId zoneId = zone.toZoneId();
+        return date.toInstant().atZone(zoneId).toLocalDateTime();
     }
 
     public static Date nowUTC() {
-        return DateTime.now().withZone(DateTimeZone.UTC).toDate();
+        return Date.from(Instant.now());
     }
 
     public static String getFullDateTime() {
-        return DateTime.now().withZone(DateTimeZone.UTC).toDateTimeISO().toString();
+        return Instant.now().toString();
     }
 
     public static boolean equals(@Nullable Date date1, @Nullable Date date2) {

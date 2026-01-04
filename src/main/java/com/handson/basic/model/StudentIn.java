@@ -5,7 +5,7 @@ import com.handson.basic.util.Dates;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import org.hibernate.validator.constraints.Length;
-import org.joda.time.LocalDate;
+import java.time.LocalDate;
 
 import java.io.Serializable;
 
@@ -18,6 +18,17 @@ public class StudentIn implements Serializable {
 
     @JsonFormat(pattern="yyyy-MM-dd")
     private LocalDate birthDate;
+
+    @Min(100)
+    @Max(800)
+    private Integer satScore;
+
+    @Min(30)
+    @Max(110)
+    private Double graduationScore;
+
+    @Length(max = 20)
+    private String phone;
 
     public String getFullname() {
         return fullname;
@@ -58,18 +69,6 @@ public class StudentIn implements Serializable {
     public void setPhone(String phone) {
         this.phone = phone;
     }
-
-    @Min(100)
-    @Max(800)
-    private Integer satScore;
-
-    @Min(30)
-    @Max(110)
-    private Double graduationScore;
-
-    @Length(max = 20)
-    private String phone;
-
 
     public Student toStudent() {
         return aStudent().createdAt(Dates.nowUTC()).birthDate(Dates.atUtc(birthDate)).fullname(fullname)
