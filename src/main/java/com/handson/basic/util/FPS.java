@@ -12,8 +12,9 @@ import jakarta.persistence.Query;
 import java.math.BigDecimal;
 import java.math.BigInteger;
 import java.sql.Timestamp;
-import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class FPS {
@@ -27,83 +28,28 @@ public class FPS {
     private Integer count;
     private Class itemClass;
 
-
-    TimeZone utcTz = TimeZone.getTimeZone("UTC");
-    SimpleDateFormat isoDf = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm'Z'"); // Quoted "Z" to indicate UTC, no timezone offset
     public FPS() {
         super();
-        isoDf.setTimeZone(utcTz);
     }
 
     public PaginationAndList exec(EntityManager em, ObjectMapper om) throws JsonProcessingException {
-        Query qrySelect = em.createNativeQuery(getSelectSql());
-        Query qryCount = em.createNativeQuery(getCountSql());
+        String mappingName = itemClass.getSimpleName();
+        Query tmpSelect;
+        try {
+            tmpSelect = em.createNativeQuery(getSelectSql(), mappingName);
+        } catch (IllegalArgumentException e) {
+            tmpSelect = em.createNativeQuery(getSelectSql(), itemClass);
+        }
+        Query tmpCount = em.createNativeQuery(getCountSql());
+        final Query qrySelect = tmpSelect;
+        final Query qryCount = tmpCount;
         conditions.forEach(x-> {
             if (x.getValue() != null) {
                 qrySelect.setParameter(x.getParameterName(), x.getValue());
                 qryCount.setParameter(x.getParameterName(), x.getValue());
             }
         });
-        @SuppressWarnings("unchecked")
-        List<Object[]> rawRows = qrySelect.getResultList();
-        List<Object> rows = new ArrayList<>();
-        for (Object[] row : rawRows) {
-            try {
-                Object obj = itemClass.getDeclaredConstructor().newInstance();
-                // Map fields based on select order: id, createdat, fullname, birthdate, satscore, graduationscore, phone, profilepicture
-                java.lang.reflect.Field idField = itemClass.getDeclaredField("id");
-                idField.setAccessible(true);
-                idField.set(obj, row[0]);
-                
-                java.lang.reflect.Field createdatField = itemClass.getDeclaredField("createdat");
-                createdatField.setAccessible(true);
-                if (row[1] != null) {
-                    if (row[1] instanceof java.time.LocalDateTime) {
-                        createdatField.set(obj, row[1]);
-                    } else if (row[1] instanceof java.sql.Timestamp) {
-                        createdatField.set(obj, ((java.sql.Timestamp) row[1]).toLocalDateTime());
-                    } else {
-                        createdatField.set(obj, row[1]);
-                    }
-                }
-                
-                java.lang.reflect.Field fullnameField = itemClass.getDeclaredField("fullname");
-                fullnameField.setAccessible(true);
-                fullnameField.set(obj, row[2]);
-                
-                java.lang.reflect.Field birthdateField = itemClass.getDeclaredField("birthdate");
-                birthdateField.setAccessible(true);
-                if (row[3] != null) {
-                    if (row[3] instanceof java.time.LocalDateTime) {
-                        birthdateField.set(obj, row[3]);
-                    } else if (row[3] instanceof java.sql.Timestamp) {
-                        birthdateField.set(obj, ((java.sql.Timestamp) row[3]).toLocalDateTime());
-                    } else {
-                        birthdateField.set(obj, row[3]);
-                    }
-                }
-                
-                java.lang.reflect.Field satscoreField = itemClass.getDeclaredField("satscore");
-                satscoreField.setAccessible(true);
-                satscoreField.set(obj, row[4]);
-                
-                java.lang.reflect.Field graduationscoreField = itemClass.getDeclaredField("graduationscore");
-                graduationscoreField.setAccessible(true);
-                graduationscoreField.set(obj, row[5]);
-                
-                java.lang.reflect.Field phoneField = itemClass.getDeclaredField("phone");
-                phoneField.setAccessible(true);
-                phoneField.set(obj, row[6]);
-                
-                java.lang.reflect.Field profilepictureField = itemClass.getDeclaredField("profilepicture");
-                profilepictureField.setAccessible(true);
-                profilepictureField.set(obj, row[7]);
-                
-                rows.add(obj);
-            } catch (Exception e) {
-                throw new RuntimeException("Error mapping result to " + itemClass.getName(), e);
-            }
-        }
+        List rows = qrySelect.getResultList();
         Number countResult = (Number) qryCount.getSingleResult();
         BigInteger total = BigInteger.valueOf(countResult.longValue());
         return PaginationAndList.of(Pagination.of(page, (total.intValue() / count) + 1, total.intValue()) ,rows);
