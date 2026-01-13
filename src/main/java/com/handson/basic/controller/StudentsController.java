@@ -1,6 +1,9 @@
 package com.handson.basic.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.handson.basic.util.AWSService;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
 import tools.jackson.databind.ObjectMapper;
 import com.handson.basic.model.*;
 import com.handson.basic.repo.StudentService;
@@ -34,6 +37,20 @@ public class StudentsController {
 
     @Autowired
     ObjectMapper om;
+    @Autowired
+    AWSService awsService;
+
+    @RequestMapping(value = "/{id}/image", consumes= MediaType.MULTIPART_FORM_DATA_VALUE, method = RequestMethod.PUT)
+    public ResponseEntity<?> uploadStudentImage(@PathVariable Long id,  @RequestParam("image") MultipartFile image)
+    {
+        Optional<Student> dbStudent = studentService.findById(id);
+        if (dbStudent.isEmpty()) throw new RuntimeException("Student with id: " + id + " not found");
+        String bucketPath = "apps/niv/student-" +  id + ".png" ;
+        awsService.putInBucket(image, bucketPath);
+        dbStudent.get().setProfilePicture(bucketPath);
+        Student updatedStudent = studentService.save(dbStudent.get());
+        return new ResponseEntity<>(StudentOut.of(updatedStudent, awsService) , HttpStatus.OK);
+    }
 
     @RequestMapping(value = "", method = RequestMethod.GET)
     public ResponseEntity<PaginationAndList> search(@RequestParam(required = false) String fullName,

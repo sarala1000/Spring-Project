@@ -4,7 +4,7 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.handson.basic.util.Dates;
+import com.handson.basic.util.AWSService;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EntityResult;
 import jakarta.persistence.Id;
@@ -25,23 +25,33 @@ public class StudentOut {
     private Long id;
 
     @JsonIgnore
-    private Date createdat;
+    private LocalDateTime createdat;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonProperty("createdat")
-    public LocalDateTime calcCreatedAt() {
-        return Dates.atLocalTime(createdat);
-    }
+    public LocalDateTime calcCreatedAt() { return createdat; }
 
     private String fullname;
 
     @JsonIgnore
-    private Date birthdate;
+    private LocalDateTime birthdate;
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @JsonProperty("birthdate")
-    public LocalDateTime calcBirthDate() {
-        return Dates.atLocalTime(birthdate);
+    public LocalDateTime calcBirthDate() { return birthdate; }
+
+    public static StudentOut of(Student student, AWSService awsService) {
+        StudentOut res = new StudentOut();
+        res.id = student.getId();
+        res.createdat = student.getCreatedAt();
+        res.fullname = student.getFullname();
+        res.birthdate = student.getBirthDate();
+        res.satscore = student.getSatScore();
+        res.graduationscore = student.getGraduationScore();
+        res.phone = student.getPhone();
+        res.profilepicture = awsService.generateLink(student.getProfilePicture());
+        res.avgscore = null;
+        return res;
     }
 
     private Integer satscore;
