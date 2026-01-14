@@ -2,6 +2,8 @@ package com.handson.basic.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.handson.basic.util.AWSService;
+import com.handson.basic.util.SmsService;
+import org.apache.commons.collections4.IteratorUtils;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 import tools.jackson.databind.ObjectMapper;
@@ -24,6 +26,7 @@ import static com.handson.basic.util.FPS.FPSBuilder.aFPS;
 import static com.handson.basic.util.FPSCondition.FPSConditionBuilder.aFPSCondition;
 import static com.handson.basic.util.FPSField.FPSFieldBuilder.aFPSField;
 import static com.handson.basic.util.Strings.likeLowerOrNull;
+import static org.springframework.util.ObjectUtils.isEmpty;
 
 @RestController
 @RequestMapping("/api/students")
@@ -40,12 +43,28 @@ public class StudentsController {
     @Autowired
     AWSService awsService;
 
+    @Autowired
+    SmsService smsService;
+
+    @RequestMapping(value = "/sms/all", method = RequestMethod.POST)
+    public ResponseEntity<?> smsAll(@RequestParam String text)
+    {
+        new Thread(()-> {
+            IteratorUtils.toList(studentService.all().iterator())
+                    .parallelStream()
+                    .map(student -> student.getPhone())
+                    .filter(phone -> !isEmpty(phone))
+                    .forEach(phone -> smsService.send(text, phone));
+        }).start();
+        return new ResponseEntity<>("SENDING", HttpStatus.OK);
+    }
+
     @RequestMapping(value = "/{id}/image", consumes= MediaType.MULTIPART_FORM_DATA_VALUE, method = RequestMethod.PUT)
     public ResponseEntity<?> uploadStudentImage(@PathVariable Long id,  @RequestParam("image") MultipartFile image)
     {
         Optional<Student> dbStudent = studentService.findById(id);
         if (dbStudent.isEmpty()) throw new RuntimeException("Student with id: " + id + " not found");
-        String bucketPath = "apps/niv/student-" +  id + ".png" ;
+        String bucketPath = "apps/sarala-SpringBootsProject-Images/student-" +  id + ".png" ;
         awsService.putInBucket(image, bucketPath);
         dbStudent.get().setProfilePicture(bucketPath);
         Student updatedStudent = studentService.save(dbStudent.get());
