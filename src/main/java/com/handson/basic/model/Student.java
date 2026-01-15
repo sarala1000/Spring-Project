@@ -3,10 +3,7 @@ package com.handson.basic.model;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.handson.basic.util.Dates;
 import jakarta.persistence.*;
-import jakarta.validation.constraints.Max;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotEmpty;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 import org.hibernate.validator.constraints.Length;
 
 import java.io.Serializable;
@@ -49,6 +46,22 @@ public class Student implements Serializable {
 
     @OneToMany(mappedBy = "student", cascade = {CascadeType.PERSIST, CascadeType.REMOVE})
     private Collection<StudentGrade> studentGrades = new ArrayList<>();
+
+    @Email(message = "Invalid email format")
+    @Size(max = 255, message = "Email is too long")
+    private String email;
+
+    public void setStudentGrades(Collection<StudentGrade> studentGrades) {
+        this.studentGrades = studentGrades;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
     public Collection<StudentGrade> getStudentGrades() {
         return studentGrades;
@@ -132,6 +145,9 @@ public class Student implements Serializable {
         @Max(110) Double graduationScore;
         private @Length(max = 20) String phone;
         private @Length(max = 500) String profilePicture;
+        @Email(message = "Invalid email format")
+        @Size(max = 255, message = "Email is too long")
+        private String email;
 
         private StudentBuilder() {
         }
@@ -179,6 +195,12 @@ public class Student implements Serializable {
             this.profilePicture = profilePicture;
             return this;
         }
+        public StudentBuilder email(String email) {
+            this.email = email;
+            return this;
+        }
+
+
 
         public Student build() {
             Student student = new Student();
@@ -190,6 +212,7 @@ public class Student implements Serializable {
             student.setGraduationScore(graduationScore);
             student.setPhone(phone);
             student.setProfilePicture(profilePicture);
+            student.setEmail(email);
             return student;
         }
     }

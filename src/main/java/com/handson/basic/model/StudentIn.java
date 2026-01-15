@@ -2,8 +2,10 @@ package com.handson.basic.model;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.handson.basic.util.Dates;
+import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
+import jakarta.validation.constraints.Size;
 import org.hibernate.validator.constraints.Length;
 import java.time.LocalDate;
 
@@ -29,6 +31,17 @@ public class StudentIn implements Serializable {
 
     @Length(max = 20)
     private String phone;
+    @Email(message = "Invalid email format")
+    @Size(max = 255, message = "Email is too long")
+    private String email;
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
 
     public String getFullname() {
         return fullname;
@@ -73,7 +86,7 @@ public class StudentIn implements Serializable {
     public Student toStudent() {
         return aStudent().createdAt(Dates.nowUTC()).birthDate(Dates.atUtc(birthDate)).fullname(fullname)
                 .satScore(satScore).graduationScore(graduationScore)
-                .phone(phone)
+                .phone(phone).email(email)
                 .build();
     }
 
@@ -83,6 +96,7 @@ public class StudentIn implements Serializable {
         student.setSatScore(satScore);
         student.setGraduationScore(graduationScore);
         student.setPhone(phone);
+        student.setEmail(email);
     }
 
 }

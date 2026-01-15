@@ -2,6 +2,7 @@ package com.handson.basic.controller;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.handson.basic.util.AWSService;
+import com.handson.basic.util.EmailService;
 import com.handson.basic.util.SmsService;
 import org.apache.commons.collections4.IteratorUtils;
 import org.springframework.http.MediaType;
@@ -45,6 +46,26 @@ public class StudentsController {
 
     @Autowired
     SmsService smsService;
+
+    @Autowired
+    EmailService emailService;
+
+    @RequestMapping(value = "/email/all", method = RequestMethod.POST)
+    public ResponseEntity<?> emailAll(
+            @RequestParam String subject,
+            @RequestParam String text
+    ) {
+        new Thread(() -> {
+            IteratorUtils.toList(studentService.all().iterator())
+                    .parallelStream()
+                    .map(student -> student.getEmail())
+                    .filter(email -> !isEmpty(email))
+                    .forEach(email -> emailService.send(subject, text, email));
+        }).start();
+
+        return new ResponseEntity<>("SENDING", HttpStatus.OK);
+    }
+
 
     @RequestMapping(value = "/sms/all", method = RequestMethod.POST)
     public ResponseEntity<?> smsAll(@RequestParam String text)
@@ -91,6 +112,7 @@ public class StudentsController {
                         aFPSField().field("s.graduation_score").alias("graduationscore").build(),
                         aFPSField().field("s.phone").alias("phone").build(),
                         aFPSField().field("s.profile_picture").alias("profilepicture").build(),
+                        aFPSField().field("s.email").alias("email").build(),
                         aFPSField().field("(select avg(sg.course_score) from  student_grade sg where sg.student_id = s.id ) ").alias("avgscore").build()
                 ))
                 .from(List.of(" student s"))

@@ -9,6 +9,9 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.EntityResult;
 import jakarta.persistence.Id;
 import jakarta.persistence.SqlResultSetMapping;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.Size;
+
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.Date;
@@ -35,6 +38,10 @@ public class StudentOut {
 
     @JsonIgnore
     private LocalDateTime birthdate;
+    @Email(message = "Invalid email format")
+    @Size(max = 255, message = "Email is too long")
+    private String email;
+
 
     @JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "yyyy-MM-dd")
     @JsonProperty("birthdate")
@@ -51,6 +58,7 @@ public class StudentOut {
         res.phone = student.getPhone();
         res.profilepicture = awsService.generateLink(student.getProfilePicture());
         res.avgscore = null;
+        res.email=student.getEmail();
         return res;
     }
 
@@ -94,6 +102,47 @@ public class StudentOut {
     public Double getAvgscore() {
         return avgscore;
     }
+
+    public LocalDateTime getCreatedat() {
+        return createdat;
+    }
+
+    public void setFullname(String fullname) {
+        this.fullname = fullname;
+    }
+
+    public LocalDateTime getBirthdate() {
+        return birthdate;
+    }
+
+    public void setBirthdate(LocalDateTime birthdate) {
+        this.birthdate = birthdate;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public void setEmail(String email) {
+        this.email = email;
+    }
+
+    public void setSatscore(Integer satscore) {
+        this.satscore = satscore;
+    }
+
+    public void setGraduationscore(Double graduationscore) {
+        this.graduationscore = graduationscore;
+    }
+
+    public void setPhone(String phone) {
+        this.phone = phone;
+    }
+
+    public void setProfilepicture(String profilepicture) {
+        this.profilepicture = profilepicture;
+    }
+
 
     // Allow AVG(BigDecimal) to populate the Double field
     public void setAvgscore(Object value) {
