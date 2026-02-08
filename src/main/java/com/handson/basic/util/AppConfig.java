@@ -36,6 +36,8 @@ public class AppConfig  {
 
     @Bean
     public AmazonS3 amazonS3() {
+        // Silence AWS SDK v1 deprecation banner
+        System.setProperty("aws.java.v1.disableDeprecationAnnouncement", "true");
         ClientConfiguration cf = new ClientConfiguration();
         cf.setMaxErrorRetry(5);
         cf.setConnectionTTL(TimeUnit.MINUTES.toMillis(5));

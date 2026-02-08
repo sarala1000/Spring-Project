@@ -2,7 +2,7 @@ package com.handson.basic.util;
 
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.handson.basic.model.Pagination;
 import com.handson.basic.model.PaginationAndList;
 import com.handson.basic.model.SortDirection;

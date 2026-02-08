@@ -8,7 +8,7 @@ import com.handson.basic.util.SmsService;
 import org.apache.commons.collections4.IteratorUtils;
 import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
-import tools.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.handson.basic.model.*;
 import com.handson.basic.repo.StudentService;
 import jakarta.persistence.EntityManager;
